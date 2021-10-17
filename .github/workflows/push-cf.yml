@@ -5,7 +5,7 @@ on: workflow_dispatch
 # Environment variables available to all jobs and steps in this workflow
 env:
   IBM_CLOUD_REGION: eu-gb
-  IBM_CLOUD_GROUP: AccessGroupId-PublicAccess
+  IBM_CLOUD_GROUP: Default
   IBM_CLOUD_SPACE: dev
   IBM_CLOUD_ORG: christelle.jolly@gmail.com
   MANIFEST_NAME: manifest.yml
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install IBM CLI
-        run: | 
+        run: |
           curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
           ibmcloud --version
           ibmcloud config --check-version=false
