@@ -8,7 +8,7 @@ from django.contrib import messages
 from datetime import datetime
 import logging
 import json
-from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_request
 from dotenv import load_dotenv
 import os
 
@@ -102,6 +102,23 @@ def get_dealer_details(request, dealer_id):
 
 
 # Create a `add_review` view to submit a review
-# def add_review(request, dealer_id):
-# ...
+def add_review(request, dealer_id):
+    load_dotenv()
+
+    if request.method == "POST":
+        if request.user.isauthenticated():
+            url = os.getenv("API_REVIEW_POST_URL")
+            post_data = {
+                "name": request.POST["name"],
+                "dealership": dealer_id,
+                "review": request.POST["review"],
+                "purchase": request.POST["purchase"],
+                "another": request.POST["another"],
+                "purchase_date": request.POST["purchase_date"],
+                "car_make": request.POST["car_make"],
+                "car_model": request.POST["car_model"],
+                "car_year": request.POST["car_year"],
+            }
+            review = post_request(url, post_data)
+            return HttpResponse(review)
 
