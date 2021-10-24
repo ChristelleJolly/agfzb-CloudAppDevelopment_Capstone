@@ -17,7 +17,11 @@ def get_request(url, **kwargs):
 
     response = requests.get(url, headers={'Content-Type': 'application/json'},
                                     params=kwargs)
-    status_code = response.status_code
+    status_code = str(response.status_code)
+
+    if status_code.startswith("4") or status_code.startswith("5"):
+        raise Exception("Get request error for url {} and args {} : status code {}".format(url, kwargs, status_code))
+
     json_data = json.loads(response.text)
     return json_data
 
@@ -25,7 +29,11 @@ def get_request(url, **kwargs):
 # e.g., response = requests.post(url, params=kwargs, json=payload)
 def post_request(url, data, **kwargs):
     response = requests.post(url, params=kwargs, json=data)
-    status_code = response.status_code
+    status_code = str(response.status_code)
+
+    if status_code.startswith("4") or status_code.startswith("5"):
+        raise Exception("Post request error for url {}, data {} and args {} : status code {}".format(url, data, kwargs, status_code))
+
     json_data = json.loads(response.text)
     return json_data
 

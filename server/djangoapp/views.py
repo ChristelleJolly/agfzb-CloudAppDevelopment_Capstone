@@ -1,16 +1,16 @@
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect, reverse
-# from .models import related models
-# from .restapis import related methods
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.shortcuts import get_object_or_404
 from datetime import datetime
 import logging
 import json
-from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_request
 from dotenv import load_dotenv
 import os
+from .restapis import get_dealers_from_cf, get_dealer_reviews_from_cf, post_request
+from .models import CarModel
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -105,22 +105,42 @@ def get_dealer_details(request, dealer_id):
 
 # Create a `add_review` view to submit a review
 def add_review(request, dealer_id):
+    print("add_review")
     load_dotenv()
 
-    if request.method == "POST":
-        if request.user.isauthenticated():
-            url = os.getenv("API_REVIEW_POST_URL")
+    if request.method == "GET":
+        if request.user.is_authenticated:
+            context = {}
+            context["dealer_id"] = dealer_id
+            cars = CarModel.objects.filter(dealer_id=dealer_id).all()
+            context["cars"]=cars
+
+            return render(request, 'djangoapp/add_review.html', context)
+            
+        else:
+            raise Exception("User should be authenticated to submit a review")
+
+    elif request.method == "POST":
+        if request.user.is_authenticated:
+            url = os.getenv("API_REVIEW_URL")
+
+            car = get_object_or_404(CarModel, id=request.POST["car"])
+            name = "Anonymous"
+            if request.user.first_name or request.user.last_name:
+                name = request.user.first_name + " " + request.user.last_name
+
             post_data = {
-                "name": request.POST["name"],
+                "name": name,
                 "dealership": dealer_id,
-                "review": request.POST["review"],
-                "purchase": request.POST["purchase"],
-                "another": request.POST["another"],
-                "purchase_date": request.POST["purchase_date"],
-                "car_make": request.POST["car_make"],
-                "car_model": request.POST["car_model"],
-                "car_year": request.POST["car_year"],
+                "review": request.POST["content"],
+                "purchase": "purchasecheck" in request.POST,
+                "purchase_date": request.POST["purchasedate"],
+                "car_make": car.car_make.name,
+                "car_model": car.name,
+                "car_year": car.year.strftime("%Y"),
             }
             review = post_request(url, post_data)
-            return HttpResponse(review)
+            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+        else:
+            raise Exception("User should be authenticated to submit a review")
 
