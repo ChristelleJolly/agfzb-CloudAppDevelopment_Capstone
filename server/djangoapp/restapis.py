@@ -3,6 +3,7 @@ import json
 from .models import CarDealer, DealerReview
 from requests.auth import HTTPBasicAuth
 import os
+import sys
 from dotenv import load_dotenv
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -111,14 +112,17 @@ def analyze_review_sentiments(text):
     )
 
     natural_language_understanding.set_service_url(url)
+    sentiment_label = ""
 
-    json_result = natural_language_understanding.analyze(
-        text=text,
-        features=Features(sentiment=SentimentOptions(targets=[text]))).get_result()
-
-    sentiment_label = None
-    if json_result and json_result["sentiment"]:
-        sentiment_label = json_result["sentiment"]["document"]["label"]
+    try:
+        json_result = natural_language_understanding.analyze(
+            text=text,
+            features=Features(sentiment=SentimentOptions(targets=[text]))).get_result()
+    
+        if json_result and json_result["sentiment"]:
+            sentiment_label = json_result["sentiment"]["document"]["label"]
+    except:
+        print("Unexpected error with NLU service:", sys.exc_info()[0])
     
     return sentiment_label
 
